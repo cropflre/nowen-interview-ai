@@ -8,7 +8,7 @@ const now = () => new Date().toISOString();
 const TASKS = Object.freeze([
   { id: 'stage', title: '完成一次冒险', description: '通关任意已解锁关卡（重玩也计入任务）', goal: 1, xp: 25 },
   { id: 'review', title: '完成一次记忆修炼', description: '独立回答、揭晓并完成自评', goal: 1, xp: 20 },
-  { id: 'interview', title: '完成一次模拟面试', description: '完整完成或主动结束一次面试', goal: 1, xp: 40 },
+  { id: 'interview', title: '完成一次模拟面试', description: '回答完全部面试问题（提前结束不计入）', goal: 1, xp: 40 },
   { id: 'demon', title: '净化心魔', description: '完成心魔挑战且所有知识卡核对通过', goal: 1, xp: 60 },
 ]);
 export class QuestError extends Error {
@@ -41,7 +41,10 @@ function progress(db, date) {
   return {
     stage: db.prepare("SELECT COUNT(*) AS n FROM game_attempts WHERE status='cleared' AND substr(finished_at,1,10)=?").get(date).n,
     review: db.prepare('SELECT COUNT(*) AS n FROM review_logs WHERE substr(created_at,1,10)=?').get(date).n,
-    interview: db.prepare("SELECT COUNT(*) AS n FROM sessions WHERE status='completed' AND substr(completed_at,1,10)=?").get(date).n,
+    interview: db.prepare(`SELECT COUNT(*) AS n FROM sessions s WHERE s.status='completed'
+      AND substr(s.completed_at,1,10)=?
+      AND EXISTS (SELECT 1 FROM turns t WHERE t.session_id=s.id AND t.answer IS NOT NULL)
+      AND NOT EXISTS (SELECT 1 FROM turns t WHERE t.session_id=s.id AND t.answer IS NULL)`).get(date).n,
     demon: db.prepare("SELECT COUNT(*) AS n FROM demon_encounters WHERE status='cleared' AND day=?").get(date).n,
   };
 }
