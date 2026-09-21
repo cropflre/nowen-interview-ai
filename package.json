@@ -1,6 +1,6 @@
 {
   "name": "nowen-interview-ai",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22.13.0" },
@@ -13,6 +13,8 @@
     "test": "node --test server/*.test.mjs scripts/*.test.mjs",
     "test:e2e": "node --test tests/*.browser.test.mjs",
     "import:legacy": "node scripts/import-legacy.mjs",
+    "bank:seed": "node scripts/seed-advanced.mjs",
+    "account": "node scripts/accounts.mjs",
     "backup": "node scripts/database-maintenance.mjs backup",
     "restore": "node scripts/database-maintenance.mjs restore"
   },
