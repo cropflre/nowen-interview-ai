@@ -18,3 +18,7 @@ jobs:
         run: npm test
       - name: Vite production build
         run: npm run build
+      - name: Install Chromium browser
+        run: npx playwright install --with-deps chromium
+      - name: Chromium end-to-end smoke
+        run: npm run test:e2e
