@@ -1,8 +1,11 @@
 node_modules/
 dist/
 data/
+backups/
 *.db
 *.db-wal
 *.db-shm
+*.sqlite
+*.sqlite.json
 .env
 .DS_Store
