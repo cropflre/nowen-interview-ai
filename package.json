@@ -13,6 +13,6 @@
     "test": "node --test server/*.test.mjs scripts/*.test.mjs",
     "import:legacy": "node scripts/import-legacy.mjs"
   },
-  "dependencies": { "react": "^19.1.0", "react-dom": "^19.1.0" },
+  "dependencies": { "acorn": "^8.15.0", "react": "^19.1.0", "react-dom": "^19.1.0" },
   "devDependencies": { "vite": "^7.1.0" }
 }
