@@ -5,6 +5,7 @@ import { resolve, extname, sep } from 'node:path';
 import { createDatabase, catalog, startSession, getSession, answerSession, finishSession, listSessions, AppError } from './core.mjs';
 import { knowledgeCatalog, reviewQueue, reviewDashboard, startReview, getAttempt, revealReview, completeReview } from './memory.mjs';
 import { gameWorld, startGameStage, gameAttempt, answerGameStage } from './game.mjs';
+import { dailyDashboard, claimDaily, startDemon, getDemon, advanceDemon } from './quest.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DIST = resolve(ROOT, 'dist');
@@ -42,6 +43,15 @@ export function createAppServer(db) {
         if (gameMatch) {
           if (req.method === 'GET' && !gameMatch[2]) return send(200, gameAttempt(db, gameMatch[1]));
           if (req.method === 'POST' && gameMatch[2] === 'answer') return send(200, answerGameStage(db, gameMatch[1], await parseJson(req)));
+        }
+        if (req.method === 'GET' && path === '/api/quest/daily') return send(200, dailyDashboard(db));
+        const dailyMatch = /^\/api\/quest\/daily\/(stage|review|interview|demon)\/claim$/.exec(path);
+        if (req.method === 'POST' && dailyMatch) return send(200, claimDaily(db, dailyMatch[1]));
+        if (req.method === 'POST' && path === '/api/quest/demon/start') return send(201, startDemon(db));
+        const demonMatch = /^\/api\/quest\/demon\/([0-9a-f-]{36})(?:\/(advance))?$/.exec(path);
+        if (demonMatch) {
+          if (req.method === 'GET' && !demonMatch[2]) return send(200, getDemon(db, demonMatch[1]));
+          if (req.method === 'POST' && demonMatch[2] === 'advance') return send(200, advanceDemon(db, demonMatch[1], (await parseJson(req)).attemptId));
         }
         if (req.method === 'GET' && path === '/api/knowledge') return send(200, knowledgeCatalog(db, url.searchParams.get('q') || ''));
         if (req.method === 'GET' && path === '/api/review/queue') return send(200, reviewQueue(db));
