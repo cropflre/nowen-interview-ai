@@ -7,6 +7,7 @@ import { knowledgeCatalog, reviewQueue, reviewDashboard, startReview, getAttempt
 import { gameWorld, startGameStage, gameAttempt, answerGameStage } from './game.mjs';
 import { dailyDashboard, claimDaily, startDemon, getDemon, advanceDemon } from './quest.mjs';
 import { progressionDashboard, readStory, claimAchievement, startCodeRun, codeRun, answerCodeRun } from './progression.mjs';
+import { editorCatalog, editorPuzzle, saveEditorDraft, submitEditor } from './editor.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DIST = resolve(ROOT, 'dist');
@@ -65,6 +66,14 @@ export function createAppServer(db) {
           if (req.method === 'GET' && !codeMatch[2]) return send(200, codeRun(db, codeMatch[1]));
           if (req.method === 'POST' && codeMatch[2] === 'answer') return send(200, answerCodeRun(db, codeMatch[1], await parseJson(req)));
         }
+        if (req.method === 'GET' && path === '/api/editor') return send(200, editorCatalog(db));
+        const editorMatch = /^\/api\/editor\/([a-z0-9-]+)(?:\/(draft|submit))?$/.exec(path);
+        if (editorMatch) {
+          const [, puzzleId, action] = editorMatch;
+          if (req.method === 'GET' && !action) return send(200, editorPuzzle(db, puzzleId));
+          if (req.method === 'PUT' && action === 'draft') return send(200, saveEditorDraft(db, puzzleId, (await parseJson(req)).source));
+          if (req.method === 'POST' && action === 'submit') return send(200, submitEditor(db, puzzleId, (await parseJson(req)).source));
+        }
         if (req.method === 'GET' && path === '/api/knowledge') return send(200, knowledgeCatalog(db, url.searchParams.get('q') || ''));
         if (req.method === 'GET' && path === '/api/review/queue') return send(200, reviewQueue(db));
         if (req.method === 'GET' && path === '/api/review/dashboard') return send(200, reviewDashboard(db));
@@ -77,7 +86,7 @@ export function createAppServer(db) {
           if (req.method === 'POST' && action === 'complete') return send(200, completeReview(db, attemptId, await parseJson(req)));
         }
         if (req.method === 'GET' && path === '/api/sessions') return send(200, listSessions(db));
-        if (req.method === 'POST' && path === '/api/sessions') return send(201, startSession(db, await parseJson(req)));
+        if (req.method === 'POST' && path === '/api/sessions') return send(201, startSession(db, await parseJson(req));
         const match = /^\/api\/sessions\/([0-9a-f-]{36})(?:\/(answers|finish))?$/.exec(path);
         if (match) {
           const [, id, action] = match;
