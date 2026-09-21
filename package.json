@@ -1,6 +1,6 @@
 {
   "name": "nowen-interview-ai",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22.13.0" },
@@ -12,7 +12,9 @@
     "start": "node server/index.mjs",
     "test": "node --test server/*.test.mjs scripts/*.test.mjs",
     "test:e2e": "node --test tests/*.browser.test.mjs",
-    "import:legacy": "node scripts/import-legacy.mjs"
+    "import:legacy": "node scripts/import-legacy.mjs",
+    "backup": "node scripts/database-maintenance.mjs backup",
+    "restore": "node scripts/database-maintenance.mjs restore"
   },
   "dependencies": { "acorn": "^8.15.0", "react": "^19.1.0", "react-dom": "^19.1.0" },
   "devDependencies": { "playwright": "^1.55.0", "vite": "^7.1.0" }
