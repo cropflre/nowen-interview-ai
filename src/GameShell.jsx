@@ -2,6 +2,7 @@ import { useState } from 'react';
 import App from './App.jsx';
 import ReviewCenter from './ReviewCenter.jsx';
 import GameView from './GameView.jsx';
+import FrameworkView from './FrameworkView.jsx';
 import QuestCenter from './QuestCenter.jsx';
 import ProgressionView from './ProgressionView.jsx';
 import EditorView from './EditorView.jsx';
@@ -18,6 +19,7 @@ export default function GameShell() {
       <div className="quest-global-tabs">
         <button className={mode === 'map' ? 'active' : ''} onClick={() => setMode('map')} aria-pressed={mode === 'map'}>🌍 世界地图</button>
         <button className={mode === 'game' ? 'active' : ''} onClick={() => setMode('game')} aria-pressed={mode === 'game'}>🗺 冒险闯关</button>
+        <button className={mode === 'framework' ? 'active' : ''} onClick={() => setMode('framework')} aria-pressed={mode === 'framework'}>🏝 框架群岛</button>
         <button className={mode === 'daily' ? 'active' : ''} onClick={() => setMode('daily')} aria-pressed={mode === 'daily'}>📜 每日修炼</button>
         <button className={mode === 'demon' ? 'active' : ''} onClick={() => setMode('demon')} aria-pressed={mode === 'demon'}>👹 心魔讨伐</button>
         <button className={mode === 'progression' ? 'active' : ''} onClick={() => setMode('progression')} aria-pressed={mode === 'progression'}>🌟 成长与挑战</button>
@@ -26,8 +28,9 @@ export default function GameShell() {
         <button className={mode === 'interview' ? 'active' : ''} onClick={() => setMode('interview')} aria-pressed={mode === 'interview'}>⚔️ 模拟面试</button>
       </div>
     </nav>
-    {['map', 'daily', 'demon'].includes(mode) && <QuestCenter mode={mode} onPlay={() => setMode('game')} onReview={() => setMode('review')} onInterview={() => setMode('interview')} onDemon={() => setMode('demon')} />}
+    {['map', 'daily', 'demon'].includes(mode) && <QuestCenter mode={mode} onPlay={() => setMode('game')} onFramework={() => setMode('framework')} onReview={() => setMode('review')} onInterview={() => setMode('interview')} onDemon={() => setMode('demon')} />}
     {mode === 'game' && <GameView onOpenInterview={() => setMode('interview')} onOpenReview={() => setMode('review')} />}
+    {mode === 'framework' && <FrameworkView onForest={() => setMode('game')} onReview={() => setMode('review')} onMap={() => setMode('map')} />}
     {mode === 'progression' && <ProgressionView onPlay={() => setMode('game')} onReview={() => setMode('review')} />}
     {mode === 'editor' && <EditorView onPlay={() => setMode('game')} onReview={() => setMode('review')} />}
     {mode === 'review' && <main className="quest-review-shell"><button className="quest-back" onClick={() => setMode('map')}>← 返回世界地图</button><ReviewCenter /></main>}
