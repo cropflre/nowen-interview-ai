@@ -1,0 +1,16 @@
+import { useEffect, useState } from 'react';
+import './framework.css';
+
+async function json(path){const response=await fetch(path);const result=await response.json();if(!response.ok)throw new Error(result.error||'地图加载失败');return result;}
+export default function WorldMap({onForest,onFramework,onDaily,onDemon,onReview,onInterview}){
+ const [world,setWorld]=useState(null),[framework,setFramework]=useState(null),[daily,setDaily]=useState(null),[error,setError]=useState('');
+ useEffect(()=>{let live=true;Promise.all([json('/api/game/world'),json('/api/framework/world'),json('/api/quest/daily')]).then(([forest,islands,tasks])=>{if(live){setWorld(forest);setFramework(islands);setDaily(tasks);}}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[]);
+ return <main className="quest-hub world-v07"><div className="quest-hub-inner"><header className="quest-hub-header"><div><span className="quest-hub-eyebrow">NOWEN CODE QUEST · WORLD MAP V0.7</span><h1>修炼世界地图</h1><p>两座冒险世界：先穿越 JavaScript 森林，再登上 React 框架群岛。</p></div><div className="quest-hub-level"><span>✦ 修炼等级</span><strong>Lv.{world?.player.level??'—'}</strong><small>{world?.player.xp??'—'} XP</small></div></header>
+ {error&&<p className="quest-hub-alert" role="alert">{error}</p>}
+ {!world||!framework||!daily?<p role="status" className="quest-hub-loading">正在读取世界地图与 SQLite 存档…</p>:<>
+ <section className="quest-world-feature"><div><span className="quest-world-tag">WORLD 01 · 已开放</span><h2>🌲 JavaScript 森林</h2><p>作用域、闭包、异步、代码侦探与事件循环守卫者。</p><div className="quest-world-progress"><span>关卡进度 {world.cleared}/{world.stages.length}</span><span>{Math.round(world.cleared/world.stages.length*100)}%</span></div><div className="quest-hub-bar"><i style={{width:`${world.cleared/world.stages.length*100}%`}}/></div><button className="quest-hub-primary" onClick={onForest}>{world.cleared===5?'重返森林 ↗':'继续森林冒险 ↗'}</button></div><div className="quest-world-art" aria-hidden="true"><span>✦</span><div>🌲</div><small>THE FOREST OF JAVASCRIPT</small></div></section>
+ <section className={`framework-world-card ${framework.unlocked?'open':'closed'}`}><div><span>WORLD 02 · {framework.unlocked?'已开放':'等待解锁'}</span><h2>🏝️ React 框架群岛</h2><p>状态港湾 → 副作用礁石 → 协调航道 → 性能灯塔 → 组件架构守卫者</p><div className="framework-progress"><i style={{width:`${framework.cleared/5*100}%`}}/></div><small>关卡进度 {framework.cleared}/5 · 共享等级、经验与记忆训练</small><button className="quest-hub-primary" onClick={onFramework}>{framework.unlocked?'进入框架群岛 ↗':'查看解锁条件 🔒'}</button></div><div className="framework-world-art" aria-hidden="true">⚛️</div></section>
+ <section className="quest-hub-zones"><div className="quest-hub-zone"><span>🏙️ WORLD 03</span><h3>工程之城</h3><p>构建、性能、测试与架构</p><small>规划中 · 尚未开放</small></div></section>
+ <section className="quest-hub-shortcuts"><button onClick={onDaily}><strong>📜 每日修炼</strong><span>已完成 {daily.completed}/{daily.tasks.length} 项 · {daily.timeZone} 日期 ↗</span></button><button onClick={onDemon}><strong>👹 心魔讨伐</strong><span>当前 {daily.demons.length} 个候选知识点 ↗</span></button><button onClick={onReview}><strong>🧠 记忆中心</strong><span>待复习 {world.dueReviews} 题 ↗</span></button><button onClick={onInterview}><strong>⚔️ 面试之塔</strong><span>进入文字模拟面试 ↗</span></button></section>
+ </>}</div></main>;
+}
