@@ -79,7 +79,7 @@ export default function ReviewCenter() {
     {dashboard && <div className="memory-metrics">
       <div><strong>{dashboard.due}</strong><small>今日到期</small></div>
       <div><strong>{dashboard.stable}</strong><small>稳定掌握</small></div>
-      <div><strong>{dashboard.delayedRate === null ? '—' : `${dashboard.delayedRate}%`}</strong><small>延迟复测正确率 · {dashboard.delayedAttempts} 次样本</small></div>
+      <div><strong>{dashboard.delayedRate === null ? '—' : `${dashboard.delayedRate}%`}</strong><small>延迟复测自评覆盖率 · {dashboard.delayedAttempts} 次样本</small></div>
       <div><strong>{dashboard.total}</strong><small>知识库题目数</small></div>
     </div>}
     {attempt ? <div className="memory-practice">
