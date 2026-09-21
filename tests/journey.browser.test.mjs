@@ -136,7 +136,7 @@ test('Chromium: independent recall, reveal, reload, scheduled due review and sel
     assert.equal(item.lapses, 1);
     assert.equal(item.delayed_success, 0);
     const delayed = db.prepare('SELECT delayed, correct, covered FROM review_logs WHERE knowledge_id=? ORDER BY id DESC LIMIT 1').get(knowledgeId);
-    assert.deepEqual(delayed, { delayed: 1, correct: 0, covered: 0 });
+    assert.deepEqual({ ...delayed }, { delayed: 1, correct: 0, covered: 0 });
     assert.equal(db.prepare("SELECT COUNT(*) AS n FROM review_attempts WHERE knowledge_id=? AND phase='completed'").get(knowledgeId).n, 2);
     await page.getByText('0%').waitFor();
   });
