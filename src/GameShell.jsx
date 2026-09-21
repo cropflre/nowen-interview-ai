@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import App from './App.jsx';
+import AiInterviewView from './AiInterviewView.jsx';
 import ReviewCenter from './ReviewCenter.jsx';
 import GameView from './GameView.jsx';
 import FrameworkView from './FrameworkView.jsx';
@@ -27,7 +28,8 @@ export default function GameShell() {
         <button className={mode === 'progression' ? 'active' : ''} onClick={() => setMode('progression')} aria-pressed={mode === 'progression'}>🌟 成长与挑战</button>
         <button className={mode === 'editor' ? 'active' : ''} onClick={() => setMode('editor')} aria-pressed={mode === 'editor'}>⌨️ 代码工坊</button>
         <button className={mode === 'review' ? 'active' : ''} onClick={() => setMode('review')} aria-pressed={mode === 'review'}>🧠 记忆修炼</button>
-        <button className={mode === 'interview' ? 'active' : ''} onClick={() => setMode('interview')} aria-pressed={mode === 'interview'}>⚔️ 模拟面试</button>
+        <button className={mode === 'interview' ? 'active' : ''} onClick={() => setMode('interview')} aria-pressed={mode === 'interview'}>⚔️ 规则面试</button>
+        <button className={mode === 'ai-interview' ? 'active' : ''} onClick={() => setMode('ai-interview')} aria-pressed={mode === 'ai-interview'}>🤖 AI 面试</button>
       </div>
     </nav>
     {mode === 'map' && <WorldMap onForest={() => setMode('game')} onFramework={() => setMode('framework')} onDaily={() => setMode('daily')} onDemon={() => setMode('demon')} onReview={() => setMode('review')} onInterview={() => setMode('interview')} />}
@@ -39,5 +41,6 @@ export default function GameShell() {
     {mode === 'editor' && <EditorView onPlay={() => setMode('game')} onReview={() => setMode('review')} />}
     {mode === 'review' && <main className="quest-review-shell"><button className="quest-back" onClick={() => setMode('map')}>← 返回世界地图</button><ReviewCenter /></main>}
     {mode === 'interview' && <App />}
+    {mode === 'ai-interview' && <AiInterviewView onRules={() => setMode('interview')} />}
   </>;
 }
