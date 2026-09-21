@@ -5,6 +5,7 @@ import { resolve, extname, sep } from 'node:path';
 import { createDatabase, catalog, startSession, getSession, answerSession, finishSession, listSessions, AppError } from './core.mjs';
 import { knowledgeCatalog, reviewQueue, reviewDashboard, startReview, getAttempt, revealReview, completeReview } from './memory.mjs';
 import { gameWorld, startGameStage, gameAttempt, answerGameStage } from './game.mjs';
+import { frameworkWorld, startFrameworkStage, frameworkAttempt, answerFrameworkStage } from './framework.mjs';
 import { dailyDashboard, claimDaily, startDemon, getDemon, advanceDemon } from './quest.mjs';
 import { progressionDashboard, readStory, claimAchievement, startCodeRun, codeRun, answerCodeRun } from './progression.mjs';
 import { editorCatalog, editorPuzzle, saveEditorDraft, submitEditor } from './editor.mjs';
@@ -45,6 +46,14 @@ export function createAppServer(db) {
         if (gameMatch) {
           if (req.method === 'GET' && !gameMatch[2]) return send(200, gameAttempt(db, gameMatch[1]));
           if (req.method === 'POST' && gameMatch[2] === 'answer') return send(200, answerGameStage(db, gameMatch[1], await parseJson(req)));
+        }
+        if (req.method === 'GET' && path === '/api/framework/world') return send(200, frameworkWorld(db));
+        const frameworkStage = /^\/api\/framework\/stages\/([a-z0-9-]+)\/start$/.exec(path);
+        if (req.method === 'POST' && frameworkStage) return send(201, startFrameworkStage(db, frameworkStage[1]));
+        const frameworkMatch = /^\/api\/framework\/attempts\/([0-9a-f-]{36})(?:\/(answer))?$/.exec(path);
+        if (frameworkMatch) {
+          if (req.method === 'GET' && !frameworkMatch[2]) return send(200, frameworkAttempt(db, frameworkMatch[1]));
+          if (req.method === 'POST' && frameworkMatch[2] === 'answer') return send(200, answerFrameworkStage(db, frameworkMatch[1], await parseJson(req)));
         }
         if (req.method === 'GET' && path === '/api/quest/daily') return send(200, dailyDashboard(db));
         const dailyMatch = /^\/api\/quest\/daily\/(stage|review|interview|demon)\/claim$/.exec(path);
