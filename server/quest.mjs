@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { initGame } from './game.mjs';
+import { initFramework } from './framework.mjs';
+import { calendarDay, calendarRange, calendarZone } from './calendar.mjs';
 import { startReview, getAttempt } from './memory.mjs';
 
-// Same UTC day convention as the existing game and memory engines.
-const day = () => new Date().toISOString().slice(0, 10);
+const day = () => calendarDay();
 const now = () => new Date().toISOString();
 const TASKS = Object.freeze([
   { id: 'stage', title: '完成一次冒险', description: '通关任意已解锁关卡（重玩也计入任务）', goal: 1, xp: 25 },
@@ -16,6 +17,7 @@ export class QuestError extends Error {
 }
 export function initQuest(db) {
   initGame(db);
+  initFramework(db);
   db.exec(`CREATE TABLE IF NOT EXISTS demon_encounters (
     id TEXT PRIMARY KEY,
     day TEXT NOT NULL,
@@ -38,15 +40,31 @@ function eligible(db) {
     ORDER BY r.lapses DESC, r.due_on, k.id LIMIT 30`).all(day());
 }
 function progress(db, date) {
+  // SQLite timestamps remain UTC; compare UTC instants for the configured local day.
+  const {start,end}=calendarRange(`${date}T12:00:00.000Z`);
+  // Noon UTC might belong to previous day in some timezones. Resolve using the
+  // supplied calendar day and its boundaries, not the current clock.
+  const bounds = calendarRangeForDay(date);
+  const {start: from,end: to}=bounds;
   return {
-    stage: db.prepare("SELECT COUNT(*) AS n FROM game_attempts WHERE status='cleared' AND substr(finished_at,1,10)=?").get(date).n,
-    review: db.prepare('SELECT COUNT(*) AS n FROM review_logs WHERE substr(created_at,1,10)=?').get(date).n,
+    stage: db.prepare(`SELECT (SELECT COUNT(*) FROM game_attempts WHERE status='cleared' AND finished_at>=? AND finished_at<?)
+      +(SELECT COUNT(*) FROM framework_attempts WHERE status='cleared' AND finished_at>=? AND finished_at<?) AS n`).get(from,to,from,to).n,
+    review: db.prepare('SELECT COUNT(*) AS n FROM review_logs WHERE created_at>=? AND created_at<?').get(from,to).n,
     interview: db.prepare(`SELECT COUNT(*) AS n FROM sessions s WHERE s.status='completed'
-      AND substr(s.completed_at,1,10)=?
+      AND s.completed_at>=? AND s.completed_at<?
       AND EXISTS (SELECT 1 FROM turns t WHERE t.session_id=s.id AND t.answer IS NOT NULL)
-      AND NOT EXISTS (SELECT 1 FROM turns t WHERE t.session_id=s.id AND t.answer IS NULL)`).get(date).n,
+      AND NOT EXISTS (SELECT 1 FROM turns t WHERE t.session_id=s.id AND t.answer IS NULL)`).get(from,to).n,
     demon: db.prepare("SELECT COUNT(*) AS n FROM demon_encounters WHERE status='cleared' AND day=?").get(date).n,
   };
+}
+function calendarRangeForDay(date) {
+  // Starting from 12:00Z then probe +/- 24h to find a timestamp in the requested local day.
+  const noon=Date.parse(`${date}T12:00:00.000Z`);
+  for(const delta of [0,-12,12,-24,24]) {
+    const candidate=new Date(noon+delta*3600000);
+    if(calendarDay(candidate)===date)return calendarRange(candidate);
+  }
+  throw new QuestError(`日历日期 ${date} 在 ${calendarZone()} 中无效`);
 }
 export function dailyDashboard(db) {
   initQuest(db);
@@ -58,9 +76,9 @@ export function dailyDashboard(db) {
     claimed: Boolean(db.prepare('SELECT 1 FROM game_rewards WHERE event_key=?').get(`daily:${date}:${task.id}`)),
   }));
   const active = db.prepare("SELECT id FROM demon_encounters WHERE status='active' ORDER BY started_at DESC LIMIT 1").get();
-  return { day: date, tasks, completed: tasks.filter(t => t.completed).length,
+  return { day: date, timeZone: calendarZone(), tasks, completed: tasks.filter(t => t.completed).length,
     claimed: tasks.filter(t => t.claimed).length, demons: eligible(db).slice(0, 3),
-    activeEncounterId: active?.id ?? null, notice: '每日任务按 UTC 日期重置。未完成不会扣除等级、金币或经验。' };
+    activeEncounterId: active?.id ?? null, notice: `每日任务按 ${calendarZone()} 自然日重置。未完成不会扣除等级、金币或经验。` };
 }
 export function claimDaily(db, taskId) {
   if (typeof taskId !== 'string' || !TASKS.some(task => task.id === taskId)) throw new QuestError('未知每日任务', 404);
