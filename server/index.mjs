@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, extname, sep } from 'node:path';
 import { createDatabase, catalog, startSession, getSession, answerSession, finishSession, listSessions, AppError } from './core.mjs';
 import { knowledgeCatalog, reviewQueue, reviewDashboard, startReview, getAttempt, revealReview, completeReview } from './memory.mjs';
+import { gameWorld, startGameStage, gameAttempt, answerGameStage } from './game.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DIST = resolve(ROOT, 'dist');
@@ -34,6 +35,14 @@ export function createAppServer(db) {
       if (path.startsWith('/api/')) {
         if (req.method === 'GET' && path === '/api/health') return send(200, { ok: true });
         if (req.method === 'GET' && path === '/api/catalog') return send(200, catalog());
+        if (req.method === 'GET' && path === '/api/game/world') return send(200, gameWorld(db));
+        const stageMatch = /^\/api\/game\/stages\/([a-z0-9-]+)\/start$/.exec(path);
+        if (req.method === 'POST' && stageMatch) return send(201, startGameStage(db, stageMatch[1]));
+        const gameMatch = /^\/api\/game\/attempts\/([0-9a-f-]{36})(?:\/(answer))?$/.exec(path);
+        if (gameMatch) {
+          if (req.method === 'GET' && !gameMatch[2]) return send(200, gameAttempt(db, gameMatch[1]));
+          if (req.method === 'POST' && gameMatch[2] === 'answer') return send(200, answerGameStage(db, gameMatch[1], await parseJson(req)));
+        }
         if (req.method === 'GET' && path === '/api/knowledge') return send(200, knowledgeCatalog(db, url.searchParams.get('q') || ''));
         if (req.method === 'GET' && path === '/api/review/queue') return send(200, reviewQueue(db));
         if (req.method === 'GET' && path === '/api/review/dashboard') return send(200, reviewDashboard(db));
@@ -67,7 +76,7 @@ export function createAppServer(db) {
       res.writeHead(200, { 'content-type': MIME[extname(target)] || 'application/octet-stream', 'x-content-type-options': 'nosniff' });
       res.end(req.method === 'HEAD' ? undefined : bytes);
     } catch (error) {
-      const status = error instanceof AppError ? error.status : 500;
+      const status = error instanceof AppError || (Number.isInteger(error?.status) && error.status >= 400 && error.status < 500) ? error.status : 500;
       if (status === 500) console.error(error);
       send(status, { error: status === 500 ? '服务器发生错误' : error.message });
     }
