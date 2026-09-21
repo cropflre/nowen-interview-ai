@@ -4,6 +4,7 @@ import ReviewCenter from './ReviewCenter.jsx';
 import GameView from './GameView.jsx';
 import FrameworkView from './FrameworkView.jsx';
 import WorldMap from './WorldMap.jsx';
+import DailyCenter from './DailyCenter.jsx';
 import QuestCenter from './QuestCenter.jsx';
 import ProgressionView from './ProgressionView.jsx';
 import EditorView from './EditorView.jsx';
@@ -30,7 +31,8 @@ export default function GameShell() {
       </div>
     </nav>
     {mode === 'map' && <WorldMap onForest={() => setMode('game')} onFramework={() => setMode('framework')} onDaily={() => setMode('daily')} onDemon={() => setMode('demon')} onReview={() => setMode('review')} onInterview={() => setMode('interview')} />}
-    {['daily', 'demon'].includes(mode) && <QuestCenter mode={mode} onPlay={() => setMode('game')} onReview={() => setMode('review')} onInterview={() => setMode('interview')} onDemon={() => setMode('demon')} />}
+    {mode === 'daily' && <DailyCenter onForest={() => setMode('game')} onFramework={() => setMode('framework')} onReview={() => setMode('review')} onDemon={() => setMode('demon')} onInterview={() => setMode('interview')} />}
+    {mode === 'demon' && <QuestCenter mode={mode} onPlay={() => setMode('game')} onReview={() => setMode('review')} onInterview={() => setMode('interview')} onDemon={() => setMode('demon')} />}
     {mode === 'game' && <GameView onOpenInterview={() => setMode('interview')} onOpenReview={() => setMode('review')} />}
     {mode === 'framework' && <FrameworkView onForest={() => setMode('game')} onReview={() => setMode('review')} onMap={() => setMode('map')} />}
     {mode === 'progression' && <ProgressionView onPlay={() => setMode('game')} onReview={() => setMode('review')} />}
