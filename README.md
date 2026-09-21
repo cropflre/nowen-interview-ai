@@ -1,88 +1,50 @@
 # Nowen Interview AI · CODE QUEST
 
-一款**本地优先的程序员闯关学习游戏**：JavaScript 森林 + React 框架群岛 + 模拟面试 + 间隔复习 + 代码修复训练。技术栈 Node.js + React + SQLite；当前是无账号的本机单人版本，没有 AI 模型，客观选项、关键词与 AST 结构检查不能代表语义正确或真实面试通过率。
+**V0.9.0 本机原型**：React + Node.js + SQLite 的前端闯关、文字模拟面试、间隔记忆与代码修复训练游戏。默认不启用 AI 和用户账户，保持旧版单人数据不变。尚不适合直接开放公网。
 
-## V0.7：第二世界 · React 框架群岛
+## 当前玩法
 
-通关 JavaScript 森林最终 BOSS 后，从世界地图或顶部导航进入 React 群岛。现已开放 **5 个完整关卡、15 道题**：状态港湾、副作用礁石、协调航道、性能灯塔和 BOSS「组件架构守卫者」。逐关解锁，每关答对至少 2/3 通关；满分取得第二颗星，对应知识完成成功跨天复习可获得第三颗记忆星。群岛独立保存挑战和进度，但**共享原玩家 XP、唯一奖励账本与记忆库**。失败知识进入现有复习队列，刷新与重启可恢复未完成的挑战。首通与首次满分奖励仅发一次；整个群岛满分首次通关总奖励 1020 XP。每日冒险任务统计两个世界。
+- **世界 01：JavaScript 森林**：作用域、闭包、异步、代码侦探、事件循环 BOSS，共五关 15 题。
+- **世界 02：React 框架群岛**：状态、副作用、列表 key、性能及组件架构 BOSS，共五关 15 题，森林 BOSS 通关后解锁。
+- **成长循环**：星级、XP、关卡进度、世界地图、成就、剧情、每日修炼、薄弱知识心魔讨伐；SQLite 保存且奖励不重复发放。
+- **记忆中心**：15 条内置面试知识点与间隔复习，旧版 110 题可选导入；V0.9 可另导入 12 条进阶记忆卡。先独立回答，再显示参考和进行自评；自评并非客观正确率。
+- **代码工坊**：两道完整函数编辑修复题，使用语法树进行静态结构检查并持久化草稿；另有三个补丁选择题。**不执行用户 JavaScript，结构检查不是语义正确性保证。**
+- **规则模拟面试**：五个技术方向及综合，15 道人工编写的核心题，每题两轮追问；关键词覆盖只作为练习清单，不能预测面试结果。
+- **V0.8 可选 AI 面试**：服务端配置兼容 OpenAI Chat Completions 的供应方，玩家明确同意后，基于刚才的回答动态追问和生成文字复盘；超时回退人工追问，不输出伪造的能力分数。
+- **V0.9 可选本机账户**：首次账户创建、登录/退出、密码哈希、会话撤销；每个账户独立存储面试、XP、游戏和复习 SQLite。默认继续原有 `local` 模式。
 
-## V0.6：统一日历、备份与数据恢复
+## 启动
 
-- **自然日按 IANA 时区计算**：`APP_TIME_ZONE` 默认 `Asia/Shanghai`（北京时间 00:00 重置），也可设置 `America/Los_Angeles` 等有效时区。所有数据库事件时间戳仍保存 UTC；每日任务、复习到期、延迟复测与世界地图待复习数量使用配置的日历日期。支持 DST 23/25 小时日期边界。
-- **一致性快照备份**：`npm run backup` 使用 SQLite `VACUUM INTO` 快照 WAL 数据，验证数据库完整性，生成备份文件及 SHA-256 清单；已有备份不会覆盖。备份包含个人学习记录，默认放入被 Git 忽略的 `backups/`。
-- **受保护的离线恢复**：`npm run restore -- <backup.sqlite> [db] --confirm`。先退出网站和 Node API、关闭 SQLite，恢复前核对清单及 SHA-256；若存在目标 WAL/SHM 文件则拒绝恢复。恢复前原库会保留为 `.pre-restore-...sqlite`。不要手动删除活跃 WAL 绕过保护。
-- **兼容旧数据库**：只新增群岛数据表，不删除森林、面试、复习或已有 XP 记录。旧每日奖励键不会自动重写；升级当天 UTC 与本地自然日交界处可能有历史归属差异，请先备份、避免频繁更改时区。
-
-详细操作、升级边界与测试说明：[V0.6–V0.7 文档](docs/V0.6-V0.7.md)。
-
-## 历史已实现功能
-
-- **V0.5 · 可编辑代码工坊**：定时器旧闭包、异步搜索竞态两道修复题；先通关森林第四关解锁。修改源码，保存草稿，使用语法树进行结构检查并查看逐项反馈。每题首次通过奖励 75 XP，错误知识进入记忆队列。服务端**不执行玩家 JavaScript**；结构通过不代表功能测试通过。见 [代码工坊文档](docs/CODE_WORKSHOP.md)。
-- **V0.4 · 成长与挑战**：技能树、关卡剧情、成就、静态补丁选择副本。见 [成长与挑战文档](docs/PROGRESSION.md)。
-- **V0.3 · 每日修炼与心魔讨伐**：依据关卡、复习日志、完整面试、心魔净化生成四项任务，每日奖励分别为 25/20/40/60 XP，服务端使用唯一事件防重；提前结束面试不计入完成。心魔从到期薄弱知识抽取 1–3 张卡，复用原有「先答→揭晓→自评」引擎。
-- **V0.2 · 森林与面试核心**：JS 森林五关（作用域、闭包、异步、代码侦探与事件循环 BOSS），SQLite 保存 XP、星级、关卡和复习。原面试大厅包含五个技术领域与综合方向，15 道核心题每题两轮人工追问；支持文字作答、恢复、复盘、最近 30 场记录。记忆库默认 15 张核心卡，可选导入旧版 110 道题并标记未校验；支持搜索、到期队列、1/3/7/14/30 天复习计划，自评不等于客观判分。
-
-## 启动与测试
-
-需要 Node.js >=22.13 与 npm；`node:sqlite` 在部分 Node 22 版本会显示实验性提示。
+Node.js >=22.13，npm：
 
 ```bash
 npm install
 npm run dev
 ```
 
-开发网页：`http://127.0.0.1:5173`，API：`http://127.0.0.1:3001`。生产运行：
+开发界面 `http://127.0.0.1:5173`，API `http://127.0.0.1:3001`；生产本机模式使用 `npm run build && npm start`，访问 `http://127.0.0.1:3001`。默认数据库为 `data/interview.db`；`DATA_DIR` 可指定数据目录。变更前请先备份数据库。
+
+## V0.8 与 V0.9 配置
+
+**AI 默认关闭。** 由启动服务的终端设置 `AI_API_URL`（完整 HTTPS Chat Completions URL）、`AI_MODEL` 与可选 `AI_API_KEY`，再次启动即可在「🤖 AI 面试」中使用。只有在明确设置 `AI_ALLOW_HTTP_LOCAL=1` 且目标为回环地址时才接受本机 HTTP 模型。绝不要在前端配置或提交密钥。用户回答会发送到自选供应方，需核查其数据政策。
+
+**账户模式默认关闭。** 设置 `AUTH_MODE=accounts` 再启动，只允许监听本机回环地址。首次从本机页面创建账户，后续用户通过 `npm run account -- create <username>` 添加。账号数据与原始旧版 `data/interview.db` 分开，不自动迁移。原始进度转移到新账户需要先停止应用、备份，再用 `npm run account -- migrate <username> [old.db] --confirm`；目标账户必须尚无存档，绝不覆盖既有记录。备份工具 `npm run backup` 与 `npm run restore -- ... --confirm` 可继续用于玩家数据库；账户模式还需安全保存 `auth.sqlite` 与 `users/` 数据。**不要直接开放局域网或公网。**
+
+**12 条进阶知识卡需要主动导入**：`npm run bank:seed`（默认本地旧库）或 `npm run bank:seed -- /absolute/path/interview.db`。已存在的题卡及学习记录不会被覆盖。旧八股题库导入仍为 `npm run import:legacy -- /absolute/path/to/old/src/data/baguwen.js`，重复导入不清空历史；导入前停止应用并备份。
+
+具体 Windows PowerShell、Linux/macOS 配置、账户迁移步骤和安全边界，请阅读 **[V0.8–V0.9 使用及数据迁移文档](docs/V0.8-V0.9.md)**。此前的 [V0.6–V0.7 数据与双世界文档](docs/V0.6-V0.7.md)、[代码工坊文档](docs/CODE_WORKSHOP.md) 与 [成长玩法说明](docs/PROGRESSION.md) 继续有效。
+
+## 测试
 
 ```bash
 npm test
 npm run build
-npm start
-```
-
-生产地址：`http://127.0.0.1:3001`。真实 Chromium E2E（先构建）：
-
-```bash
 npx playwright install chromium
 npm run test:e2e
 ```
 
-CI 自动执行 Node 测试、Vite 生产构建和 Chromium 浏览器 E2E，包含：森林五关及重复奖励、React 群岛十五道题及途中恢复、记忆复习、代码工坊与每日任务。时区测试通过构造上海午夜、洛杉矶夏令时以及测试 SQLite 历史记录核验，不会等待真实跨天；尚未覆盖全部设备或每一种用户操作。
+GitHub Actions 自动进行 Node 单元/HTTP 测试、Vite 构建和真实 Chromium E2E。验证范围包含双世界关卡与重复奖励保护、备份恢复、时区边界、AI mock 服务生成/降级、账户 API 数据隔离、账号迁移、题库幂等和账户/AI 页面流程。**测试中的模型是假服务，不代表已测试真实供应方的模型质量。**
 
-数据库默认 `data/interview.db`，可用 `DATA_DIR` 改变目录。升级前运行：
+## 尚未实现
 
-```bash
-npm run backup
-# 自定义备份目标：
-npm run backup -- /absolute/path/interview.db /absolute/path/backup.sqlite
-```
-
-**恢复必须离线**，退出服务后：
-
-```bash
-npm run restore -- /absolute/path/backup.sqlite --confirm
-# 或指定恢复到另一个数据库：
-npm run restore -- /absolute/path/backup.sqlite /absolute/path/interview.db --confirm
-```
-
-备份要将 `.sqlite` 与同名 `.sqlite.json` 一起保存。备份不上传云端；自行复制到安全位置。
-
-## 旧版题库导入（可选）
-
-从旧 ZIP 提取 `src/data/baguwen.js`：
-
-```bash
-npm run import:legacy -- /absolute/path/to/old/src/data/baguwen.js
-```
-
-第二参数可指定目标 SQLite 文件。导入器使用 JSON.parse 处理已知结构，不执行旧 JavaScript；重复导入不清空复习记录。操作前停止服务、备份数据库并核对路径；不要复制旧版不安全的 Token 登录或用户代码执行器。
-
-## 核心 API
-
-- JS 森林：`GET /api/game/world`，`POST /api/game/stages/:id/start`，`GET /api/game/attempts/:id`，`POST /api/game/attempts/:id/answer`。
-- React 群岛：`GET /api/framework/world`，`POST /api/framework/stages/:id/start`，`GET /api/framework/attempts/:id`，`POST /api/framework/attempts/:id/answer`。
-- 每日与心魔：`GET /api/quest/daily`，`POST /api/quest/daily/:taskId/claim`，`POST /api/quest/demon/start`，`GET /api/quest/demon/:id`，`POST /api/quest/demon/:id/advance`。
-- 代码工坊：`GET /api/editor`，`GET /api/editor/:id`，`PUT /api/editor/:id/draft`，`POST /api/editor/:id/submit`。
-- 面试：`GET /api/catalog`，`GET/POST /api/sessions`，`GET /api/sessions/:id`，`POST /api/sessions/:id/answers`，`POST /api/sessions/:id/finish`。
-- 记忆：`GET /api/knowledge`，`GET /api/review/dashboard`，`GET /api/review/queue`，`POST /api/review/attempts`，`GET /api/review/attempts/:id`，`POST /api/review/attempts/:id/reveal`，`POST /api/review/attempts/:id/complete`。
-
-**安全边界：无账户认证或多用户隔离，仅供本机单人使用；不得直接开放公网或共享局域网。** 目前没有 AI 动态追问/语义判分、语音面试、安全的自由代码执行沙箱或第三个开放世界。游戏 XP/星级不是技能认证或求职结果预测。
+真正运行用户代码的隔离沙箱、客观 AI 语义正确率、语音面试、工程之城、跨设备同步、邮件找回、完整公网多租户安全防护、完整移动设备矩阵和正式 V1.0 Release，均不在当前交付范围。游戏 XP 和星级不代表真实职业能力或招聘结论。
