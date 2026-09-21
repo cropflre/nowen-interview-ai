@@ -6,6 +6,7 @@ import { createDatabase, catalog, startSession, getSession, answerSession, finis
 import { knowledgeCatalog, reviewQueue, reviewDashboard, startReview, getAttempt, revealReview, completeReview } from './memory.mjs';
 import { gameWorld, startGameStage, gameAttempt, answerGameStage } from './game.mjs';
 import { dailyDashboard, claimDaily, startDemon, getDemon, advanceDemon } from './quest.mjs';
+import { progressionDashboard, readStory, claimAchievement, startCodeRun, codeRun, answerCodeRun } from './progression.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DIST = resolve(ROOT, 'dist');
@@ -52,6 +53,17 @@ export function createAppServer(db) {
         if (demonMatch) {
           if (req.method === 'GET' && !demonMatch[2]) return send(200, getDemon(db, demonMatch[1]));
           if (req.method === 'POST' && demonMatch[2] === 'advance') return send(200, advanceDemon(db, demonMatch[1], (await parseJson(req)).attemptId));
+        }
+        if (req.method === 'GET' && path === '/api/progression') return send(200, progressionDashboard(db));
+        const storyMatch = /^\/api\/progression\/story\/([a-z0-9-]+)\/read$/.exec(path);
+        if (req.method === 'POST' && storyMatch) return send(200, readStory(db, storyMatch[1]));
+        const achievementMatch = /^\/api\/progression\/achievements\/([a-z0-9-]+)\/claim$/.exec(path);
+        if (req.method === 'POST' && achievementMatch) return send(200, claimAchievement(db, achievementMatch[1]));
+        if (req.method === 'POST' && path === '/api/progression/code/start') return send(201, startCodeRun(db));
+        const codeMatch = /^\/api\/progression\/code\/([0-9a-f-]{36})(?:\/(answer))?$/.exec(path);
+        if (codeMatch) {
+          if (req.method === 'GET' && !codeMatch[2]) return send(200, codeRun(db, codeMatch[1]));
+          if (req.method === 'POST' && codeMatch[2] === 'answer') return send(200, answerCodeRun(db, codeMatch[1], await parseJson(req)));
         }
         if (req.method === 'GET' && path === '/api/knowledge') return send(200, knowledgeCatalog(db, url.searchParams.get('q') || ''));
         if (req.method === 'GET' && path === '/api/review/queue') return send(200, reviewQueue(db));
