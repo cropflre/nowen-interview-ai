@@ -3,6 +3,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve, extname, sep } from 'node:path';
 import { createDatabase, catalog, startSession, getSession, answerSession, finishSession, listSessions, AppError } from './core.mjs';
+import { knowledgeCatalog, reviewQueue, reviewDashboard, startReview, getAttempt, revealReview, completeReview } from './memory.mjs';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const DIST = resolve(ROOT, 'dist');
@@ -33,6 +34,17 @@ export function createAppServer(db) {
       if (path.startsWith('/api/')) {
         if (req.method === 'GET' && path === '/api/health') return send(200, { ok: true });
         if (req.method === 'GET' && path === '/api/catalog') return send(200, catalog());
+        if (req.method === 'GET' && path === '/api/knowledge') return send(200, knowledgeCatalog(db, url.searchParams.get('q') || ''));
+        if (req.method === 'GET' && path === '/api/review/queue') return send(200, reviewQueue(db));
+        if (req.method === 'GET' && path === '/api/review/dashboard') return send(200, reviewDashboard(db));
+        if (req.method === 'POST' && path === '/api/review/attempts') return send(201, startReview(db, (await parseJson(req)).knowledgeId));
+        const reviewMatch = /^\/api\/review\/attempts\/([0-9a-f-]{36})(?:\/(reveal|complete))?$/.exec(path);
+        if (reviewMatch) {
+          const [, attemptId, action] = reviewMatch;
+          if (req.method === 'GET' && !action) return send(200, getAttempt(db, attemptId));
+          if (req.method === 'POST' && action === 'reveal') return send(200, revealReview(db, attemptId, await parseJson(req)));
+          if (req.method === 'POST' && action === 'complete') return send(200, completeReview(db, attemptId, await parseJson(req)));
+        }
         if (req.method === 'GET' && path === '/api/sessions') return send(200, listSessions(db));
         if (req.method === 'POST' && path === '/api/sessions') return send(201, startSession(db, await parseJson(req)));
         const match = /^\/api\/sessions\/([0-9a-f-]{36})(?:\/(answers|finish))?$/.exec(path);

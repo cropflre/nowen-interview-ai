@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { QUESTIONS, TRACKS, questionById, selectQuestions } from './questions.mjs';
+import { initMemory, enrollInterviewGaps } from './memory.mjs';
 
 export class AppError extends Error {
   constructor(message, status = 400) { super(message); this.status = status; }
@@ -24,6 +25,7 @@ export function createDatabase(filename = ':memory:') {
     CREATE INDEX IF NOT EXISTS idx_turns_session ON turns(session_id, id);
     CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at DESC);`);
   if (filename !== ':memory:') db.exec('PRAGMA journal_mode = WAL');
+  initMemory(db);
   return db;
 }
 
@@ -106,8 +108,11 @@ export function answerSession(db, id, input = {}) {
       const questionIds = JSON.parse(db.prepare('SELECT question_ids FROM sessions WHERE id = ?').get(id).question_ids);
       const next = questionIds.indexOf(current.questionId) + 1;
       if (next < questionIds.length) insertTurn(db, id, questionById.get(questionIds[next]), 0);
-      else db.prepare("UPDATE sessions SET status = 'completed', completed_at = ? WHERE id = ?")
-        .run(new Date().toISOString(), id);
+      else {
+        db.prepare("UPDATE sessions SET status = 'completed', completed_at = ? WHERE id = ?")
+          .run(new Date().toISOString(), id);
+        enrollInterviewGaps(db, id);
+      }
     }
     db.exec('COMMIT');
   } catch (error) { db.exec('ROLLBACK'); throw error; }
@@ -115,8 +120,13 @@ export function answerSession(db, id, input = {}) {
 }
 
 export function finishSession(db, id) {
-  db.prepare("UPDATE sessions SET status = 'completed', completed_at = ? WHERE id = ? AND status = 'active'")
-    .run(new Date().toISOString(), id);
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const changed = db.prepare("UPDATE sessions SET status = 'completed', completed_at = ? WHERE id = ? AND status = 'active'")
+      .run(new Date().toISOString(), id);
+    if (changed.changes) enrollInterviewGaps(db, id);
+    db.exec('COMMIT');
+  } catch (error) { db.exec('ROLLBACK'); throw error; }
   return getSession(db, id);
 }
 
