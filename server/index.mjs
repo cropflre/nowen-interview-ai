@@ -86,7 +86,7 @@ export function createAppServer(db) {
           if (req.method === 'POST' && action === 'complete') return send(200, completeReview(db, attemptId, await parseJson(req)));
         }
         if (req.method === 'GET' && path === '/api/sessions') return send(200, listSessions(db));
-        if (req.method === 'POST' && path === '/api/sessions') return send(201, startSession(db, await parseJson(req));
+        if (req.method === 'POST' && path === '/api/sessions') return send(201, startSession(db, await parseJson(req)));
         const match = /^\/api\/sessions\/([0-9a-f-]{36})(?:\/(answers|finish))?$/.exec(path);
         if (match) {
           const [, id, action] = match;
