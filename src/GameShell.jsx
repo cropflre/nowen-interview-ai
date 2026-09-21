@@ -7,6 +7,7 @@ import ProgressionView from './ProgressionView.jsx';
 import './memory.css';
 import './game.css';
 import './quest.css';
+import './navigation.css';
 
 export default function GameShell() {
   const [mode, setMode] = useState('map');
