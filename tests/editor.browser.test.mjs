@@ -20,9 +20,16 @@ test('Chromium: homepage -> workshop -> edit -> check -> persisted state -> map'
   try {
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage({ viewport: { width: 1280, height: 850 } });
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
     const origin = `http://127.0.0.1:${server.address().port}`;
-    await page.goto(origin);
-    await page.getByRole('button', { name: /代码工坊/ }).click();
+    const entry = await page.goto(origin);
+    await page.waitForTimeout(500);
+    if (!(await page.getByRole('button', { name: /代码工坊/ }).count())) {
+      console.log('Browser mount diagnostic:', JSON.stringify({ entryStatus: entry.status(), title: await page.title(), body: (await page.locator('body').innerText()).slice(0, 1000), errors }));
+    }
+    await page.getByRole('button', { name: /代码工坊/ }).click({ timeout: 8000 });
     await page.getByRole('heading', { name: '代码工坊' }).waitFor();
     await page.getByRole('button', { name: /定时器里的旧闭包/ }).click();
     const editor = page.getByRole('textbox', { name: /JavaScript · 代码编辑区/ });
