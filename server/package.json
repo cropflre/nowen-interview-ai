@@ -1,0 +1,17 @@
+{
+  "name": "js-basics-game-server",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "《前端修炼·闯关》后端：Hono + node:sqlite（内置，零编译）",
+  "scripts": {
+    "seed": "node src/seed.js",
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "node test/judge.test.mjs"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.2",
+    "hono": "^4.6.9"
+  }
+}

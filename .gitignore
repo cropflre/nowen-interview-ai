@@ -9,3 +9,9 @@ backups/
 *.sqlite.json
 .env
 .DS_Store
+
+# 后端静态目录是前端构建产物的拷贝，可随时重建
+server/public/
+
+# Vite 启动时生成的临时配置快照
+vite.config.js.timestamp-*.mjs
